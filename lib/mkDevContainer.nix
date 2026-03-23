@@ -114,6 +114,9 @@ in
 
       # Conditional host config mounts
       hostConfigMounts = ''
+        # Host CLAUDE.md (global instructions)
+        ${conditionalMount "$HOME/.claude/CLAUDE.md" "/home/developer/.claude/CLAUDE.md" "ro"}
+
         # SSH config for git operations (read-only)
         ${conditionalMount "$HOME/.ssh" "/home/developer/.ssh" "ro"}
 

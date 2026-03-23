@@ -167,6 +167,12 @@
               podman volume create claude-auth-default 2>/dev/null || true
               podman volume create llm-devcontainer-home-default 2>/dev/null || true
 
+              # Build CLAUDE.md mount if it exists
+              CLAUDE_MD_MOUNT=""
+              if [[ -f "$HOME/.claude/CLAUDE.md" ]]; then
+                CLAUDE_MD_MOUNT="-v $HOME/.claude/CLAUDE.md:/home/developer/.claude/CLAUDE.md:ro"
+              fi
+
               exec podman run \
                 --rm \
                 -it \
@@ -182,6 +188,7 @@
                 -v "$(pwd):/workspace:rw" \
                 -v llm-devcontainer-home-default:/home/developer:rw,U \
                 -v claude-auth-default:/home/developer/.claude:rw,U \
+                $CLAUDE_MD_MOUNT \
                 llm-devcontainer:latest \
                 claude "$@"
             '');
