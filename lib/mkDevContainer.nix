@@ -179,6 +179,9 @@ in
             ;;
         esac
 
+        # Ensure auth volume exists
+        podman volume create "${authVolume}" 2>/dev/null || true
+
         # Construct final podman command
         exec podman run \
           --rm \
@@ -223,6 +226,9 @@ in
         )
 
         CONTAINER_NAME="llm-devcontainer-${sanitizedName}"
+
+        # Ensure auth volume exists
+        podman volume create "${authVolume}" 2>/dev/null || true
 
         # Check if already running
         if podman ps --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
