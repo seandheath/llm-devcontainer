@@ -45,7 +45,10 @@ RUN npm install -g @anthropic-ai/claude-code && \
 
 # Copy container runtime files
 COPY --chown=1000:1000 container/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY --chown=1000:1000 container/zshrc /home/developer/.zshrc
+
+# Store dotfiles in /etc/skel for entrypoint to copy
+# (home directory is tmpfs at runtime, so baked-in files are hidden)
+COPY container/zshrc /etc/skel/.zshrc
 
 # Ensure entrypoint is executable
 USER root

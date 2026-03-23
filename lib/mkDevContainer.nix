@@ -89,14 +89,13 @@ in
 
         # Writable tmpfs mounts for runtime data
         # These paths need to be writable but don't persist
-        # Ownership handled by --userns=keep-id
+        # Home dir as tmpfs allows claude to write ~/.claude.json etc
+        # Entrypoint restores dotfiles from /etc/skel
         TMPFS=(
           "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g"
           "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m"
           "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m"
-          "--tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g"
-          "--tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g"
-          "--tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m"
+          "--tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g"
         )
 
         # Core volume mounts

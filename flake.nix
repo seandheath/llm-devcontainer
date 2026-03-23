@@ -143,10 +143,7 @@
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g \
-                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
-                --tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m \
+                --tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
                 llm-devcontainer:latest \
@@ -180,9 +177,7 @@
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g \
-                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
+                --tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g \
                 -v /nix/store:/nix/store:ro \
                 -v "$HOME/.claude:/host-claude:ro" \
                 -v "$(pwd):/workspace:rw" \

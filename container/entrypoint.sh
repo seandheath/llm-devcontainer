@@ -3,9 +3,15 @@
 #
 # Responsibilities:
 # 1. Verify /nix/store is properly mounted
-# 2. Bootstrap credentials from host to persistent volume
-# 3. Initialize direnv if present
-# 4. Execute requested command or shell
+# 2. Set up home directory (tmpfs at runtime, dotfiles from /etc/skel)
+# 3. Bootstrap credentials from host to persistent volume
+# 4. Initialize direnv if present
+# 5. Execute requested command or shell
+#
+# Home directory:
+# - /home/developer is tmpfs at runtime (writable but not persistent)
+# - Dotfiles stored in /etc/skel, copied on startup
+# - ~/.claude is a persistent volume mounted on top
 #
 # Credential flow:
 # - Host ~/.claude mounted read-only at /host-claude
@@ -46,6 +52,24 @@ verify_nix_store() {
     fi
 
     log_info "Nix store verified"
+}
+
+# Set up home directory
+# Home is tmpfs at runtime, so we copy dotfiles from /etc/skel
+# and create necessary directories
+setup_home() {
+    # Copy dotfiles from /etc/skel if not present
+    if [[ -f /etc/skel/.zshrc ]] && [[ ! -f "$HOME/.zshrc" ]]; then
+        cp /etc/skel/.zshrc "$HOME/.zshrc"
+    fi
+
+    # Create directories that tools expect
+    mkdir -p "$HOME/.cache"
+    mkdir -p "$HOME/.local/share"
+    mkdir -p "$HOME/.local/bin"
+    mkdir -p "$HOME/.npm"
+    mkdir -p "$HOME/.npm-global"
+    mkdir -p "$HOME/.config"
 }
 
 # Bootstrap credentials from host if not present in volume
@@ -100,6 +124,7 @@ main() {
     log_info "Initializing llm-devcontainer"
 
     verify_nix_store
+    setup_home
     setup_credentials
     setup_direnv
 
