@@ -37,18 +37,44 @@ llm-devcontainer is a standalone Nix flake. No host system changes required.
 
 ### Using in Your Project
 
-1. Initialize from template:
-   ```bash
-   nix flake init -t github:seandheath/llm-devcontainer
-   ```
+Add this function to your shell config (`~/.bashrc`, `~/.zshrc`, or NixOS config):
 
-2. Edit `flake.nix` to configure your project name and options
+```bash
+new-project() {
+    local name="${1:?usage: new-project <project-name>}"
+    mkdir -p "$name" && cd "$name" && nix flake init -t github:seandheath/llm-devcontainer --refresh
 
-3. Run:
-   ```bash
-   nix run .#dev     # Interactive shell
-   nix run .#claude  # Claude Code
-   ```
+    # Set project name in flake.nix
+    sed -i "s/projectName = \"my-project\"/projectName = \"$name\"/" flake.nix
+
+    if ! podman image exists llm-devcontainer:latest; then
+        nix run github:seandheath/llm-devcontainer#build
+    fi
+}
+```
+
+For NixOS, escape `${` as `''${`:
+
+```nix
+programs.bash.initExtra = ''
+  new-project() {
+      local name="''${1:?usage: new-project <project-name>}"
+      mkdir -p "$name" && cd "$name" && nix flake init -t github:seandheath/llm-devcontainer --refresh
+      sed -i "s/projectName = \"my-project\"/projectName = \"$name\"/" flake.nix
+      if ! podman image exists llm-devcontainer:latest; then
+          nix run github:seandheath/llm-devcontainer#build
+      fi
+  }
+'';
+```
+
+Then create and use a project:
+
+```bash
+new-project myapp
+nix develop
+claude
+```
 
 ## Architecture
 
