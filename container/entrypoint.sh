@@ -69,12 +69,9 @@ setup_direnv() {
     if command -v direnv &>/dev/null; then
         # Hook direnv into shells
         eval "$(direnv hook bash)" 2>/dev/null || true
-
-        # Allow workspace .envrc if present
-        if [[ -f /workspace/.envrc ]]; then
-            log_info "Found .envrc in workspace, allowing direnv"
-            direnv allow /workspace 2>/dev/null || true
-        fi
+        # Note: We don't auto-allow workspace .envrc because it typically
+        # contains `use flake` which tries to run nix inside the container.
+        # The container already provides the dev environment.
     fi
 }
 
