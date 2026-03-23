@@ -109,7 +109,8 @@ in
           "-v" "${projectPath}:/workspace:rw"
 
           # Auth volume mounted directly at ~/.claude for credential persistence
-          "-v" "${authVolume}:/home/developer/.claude:rw"
+          # :U tells podman to chown contents to match container user
+          "-v" "${authVolume}:/home/developer/.claude:rw,U"
         )
       '';
 

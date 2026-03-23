@@ -185,7 +185,7 @@
                 --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
-                -v claude-auth-default:/home/developer/.claude:rw \
+                -v claude-auth-default:/home/developer/.claude:rw,U \
                 llm-devcontainer:latest \
                 claude "$@"
             '');
