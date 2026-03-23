@@ -179,7 +179,6 @@
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
                 -v /nix/store:/nix/store:ro \
-                -v "$HOME/.claude:/host-claude:ro" \
                 -v "$(pwd):/workspace:rw" \
                 -v llm-devcontainer-home-default:/home/developer:rw,U \
                 -v claude-auth-default:/home/developer/.claude:rw,U \
