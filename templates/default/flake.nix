@@ -42,6 +42,12 @@
         '';
 
       in {
+        # Packages (for pre-building)
+        packages = {
+          shell = container.shell;
+          claude = container.claude;
+        };
+
         # Development shell with containerized claude
         devShells.default = pkgs.mkShell {
           buildInputs = [
