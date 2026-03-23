@@ -1,7 +1,6 @@
 # zshrc for llm-devcontainer development container
 #
 # Minimal but functional configuration for Claude Code development.
-# Includes direnv integration and useful aliases.
 
 # ----- History -----
 HISTFILE=~/.zsh_history
@@ -68,12 +67,6 @@ ${prompt_char} "
 
 # Right prompt: show nix shell indicator
 RPROMPT='${IN_NIX_SHELL:+%F{cyan}[nix]%f}'
-
-# ----- Direnv -----
-# Hook direnv into the shell for automatic environment loading
-if command -v direnv &>/dev/null; then
-    eval "$(direnv hook zsh)"
-fi
 
 # ----- Environment -----
 export EDITOR="${EDITOR:-nvim}"
