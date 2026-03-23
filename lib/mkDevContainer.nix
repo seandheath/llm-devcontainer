@@ -90,16 +90,14 @@ in
 
         # Writable tmpfs mounts for runtime data
         # These paths need to be writable but don't persist
-        # uid/gid ensure correct ownership with --userns=keep-id
-        HOST_UID=$(id -u)
-        HOST_GID=$(id -g)
+        # Ownership handled by --userns=keep-id
         TMPFS=(
-          "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID"
-          "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID"
-          "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m,uid=$HOST_UID,gid=$HOST_GID"
-          "--tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID"
-          "--tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g,uid=$HOST_UID,gid=$HOST_GID"
-          "--tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g"
+          "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m"
+          "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m"
+          "--tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g"
+          "--tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g"
+          "--tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m"
         )
 
         # Core volume mounts
