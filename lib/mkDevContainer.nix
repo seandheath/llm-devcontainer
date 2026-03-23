@@ -343,7 +343,7 @@ in
           "''${ENV_VARS[@]}" \
           "''${EXTRA_ARGS[@]}" \
           "$IMAGE" \
-          claude "$@"
+          claude --dangerously-skip-permissions "$@"
       '';
 
     in {
