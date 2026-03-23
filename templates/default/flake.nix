@@ -81,6 +81,22 @@
             type = "app";
             program = toString container.detached;
           };
+
+          # Update llm-devcontainer and rebuild image
+          # Usage: nix run .#update
+          update = {
+            type = "app";
+            program = toString (pkgs.writeShellScript "llm-devcontainer-update" ''
+              set -euo pipefail
+              echo "[llm-devcontainer] Updating flake inputs..."
+              nix flake update llm-devcontainer
+
+              echo "[llm-devcontainer] Rebuilding container image..."
+              nix run github:seandheath/llm-devcontainer#build
+
+              echo "[llm-devcontainer] Update complete"
+            '');
+          };
         };
 
         # Default app is the shell
