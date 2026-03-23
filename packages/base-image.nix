@@ -155,6 +155,10 @@ in pkgs.dockerTools.buildLayeredImage {
     # Shell configuration
     cp ${zshenvFile} etc/zsh/zshenv
     cp ${profileFile} etc/profile.d/nix.sh
+
+    # Create /usr/bin/env symlink (required for #!/usr/bin/env shebangs)
+    mkdir -p usr/bin
+    ln -sf ${pkgs.coreutils}/bin/env usr/bin/env
   '';
 
   config = {
