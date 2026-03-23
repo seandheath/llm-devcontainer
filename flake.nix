@@ -184,6 +184,7 @@
                 --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g \
                 --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
                 -v /nix/store:/nix/store:ro \
+                -v "$HOME/.claude:/host-claude:ro" \
                 -v "$(pwd):/workspace:rw" \
                 -v claude-auth-default:/home/developer/.claude:rw,U \
                 llm-devcontainer:latest \

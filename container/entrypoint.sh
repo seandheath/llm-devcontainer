@@ -3,10 +3,14 @@
 #
 # Responsibilities:
 # 1. Verify /nix/store is properly mounted
-# 2. Initialize direnv if present
-# 3. Execute requested command or shell
+# 2. Bootstrap credentials from host to persistent volume
+# 3. Initialize direnv if present
+# 4. Execute requested command or shell
 #
-# Credentials are handled via direct volume mount at ~/.claude by mkDevContainer.nix
+# Credential flow:
+# - Host ~/.claude mounted read-only at /host-claude
+# - Container ~/.claude is a persistent volume (per-project)
+# - On first run, credentials copied from host to volume
 
 set -euo pipefail
 
@@ -44,6 +48,39 @@ verify_nix_store() {
     log_info "Nix store verified"
 }
 
+# Bootstrap credentials from host if not present in volume
+# Host ~/.claude is mounted read-only at /host-claude
+# Container's ~/.claude is a persistent volume
+setup_credentials() {
+    local host_claude="/host-claude"
+    local container_claude="$HOME/.claude"
+
+    # Skip if host config not mounted
+    if [[ ! -d "$host_claude" ]]; then
+        log_warn "Host ~/.claude not mounted at /host-claude"
+        log_warn "Run 'claude login' inside container to authenticate"
+        return
+    fi
+
+    # Copy credentials if not already present
+    if [[ -f "$host_claude/.credentials.json" ]] && [[ ! -f "$container_claude/.credentials.json" ]]; then
+        cp "$host_claude/.credentials.json" "$container_claude/.credentials.json"
+        log_info "Copied credentials from host"
+    fi
+
+    # Copy CLAUDE.md if not present (user's global instructions)
+    if [[ -f "$host_claude/CLAUDE.md" ]] && [[ ! -f "$container_claude/CLAUDE.md" ]]; then
+        cp "$host_claude/CLAUDE.md" "$container_claude/CLAUDE.md"
+        log_info "Copied CLAUDE.md from host"
+    fi
+
+    # Copy settings.json if not present
+    if [[ -f "$host_claude/settings.json" ]] && [[ ! -f "$container_claude/settings.json" ]]; then
+        cp "$host_claude/settings.json" "$container_claude/settings.json"
+        log_info "Copied settings.json from host"
+    fi
+}
+
 # Initialize direnv if present
 setup_direnv() {
     if command -v direnv &>/dev/null; then
@@ -63,6 +100,7 @@ main() {
     log_info "Initializing llm-devcontainer"
 
     verify_nix_store
+    setup_credentials
     setup_direnv
 
     log_info "Container ready"

@@ -59,7 +59,6 @@ in
       sanitizedName = lib.replaceStrings [" " "/" "\\"] ["-" "-" "-"] name;
 
       # Auth volume name - persists credentials across container runs
-      # Mounted directly at ~/.claude for simplicity
       authVolume = "claude-auth-${sanitizedName}";
 
       # Build extra mount flags
@@ -116,6 +115,10 @@ in
 
       # Conditional host config mounts
       hostConfigMounts = ''
+        # Host Claude config for credential bootstrapping (read-only)
+        # Entrypoint copies credentials to auth volume on first run
+        ${conditionalMount "$HOME/.claude" "/host-claude" "ro"}
+
         # SSH config for git operations (read-only)
         ${conditionalMount "$HOME/.ssh" "/home/developer/.ssh" "ro"}
 
