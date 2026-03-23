@@ -143,7 +143,7 @@
                 --rm \
                 -it \
                 --userns=keep-id \
-                --network=pasta \
+                --network=host \
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \
@@ -188,7 +188,7 @@
                 --rm \
                 -it \
                 --userns=keep-id \
-                --network=pasta \
+                --network=host \
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \

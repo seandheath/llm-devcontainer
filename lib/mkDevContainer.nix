@@ -39,7 +39,7 @@ in
   #   image         - Container image name (default: llm-devcontainer:latest)
   #   extraMounts   - Additional volume mounts [{host, container, opts}]
   #   extraEnv      - Additional environment variables {NAME = "value"}
-  #   networkMode   - Network mode: "pasta", "slirp4netns", "host" (default: "pasta")
+  #   networkMode   - Network mode: "host", "pasta", "slirp4netns" (default: "host")
   #   extraArgs     - Additional podman arguments (list of strings)
   #
   # Returns:
@@ -50,7 +50,7 @@ in
     , image ? "llm-devcontainer:latest"
     , extraMounts ? []
     , extraEnv ? {}
-    , networkMode ? "pasta"
+    , networkMode ? "host"
     , extraArgs ? []
     }:
 
@@ -83,8 +83,7 @@ in
         USERNS="--userns=keep-id"
 
         # Network mode
-        # pasta is preferred (faster, more features)
-        # slirp4netns is fallback for older Podman versions
+        # host is fastest (no isolation), pasta/slirp4netns add userspace overhead
         NETWORK="--network=${networkMode}"
 
         # Writable tmpfs mounts for runtime data

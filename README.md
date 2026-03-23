@@ -120,7 +120,7 @@ containerLib.mkDevContainer {
   image = "llm-devcontainer:latest";  # Container image
   extraMounts = [];              # Additional volume mounts
   extraEnv = {};                 # Environment variables
-  networkMode = "pasta";         # Network: pasta, slirp4netns, host
+  networkMode = "host";          # Network: host, pasta, slirp4netns
   extraArgs = [];                # Additional podman arguments
 }
 ```
@@ -155,12 +155,13 @@ make fmt
 
 ## Troubleshooting
 
-### "pasta" network mode not available
+### Network modes
 
-Older Podman versions may not support pasta. Use slirp4netns:
+Default is `host` (fastest, shares host network). For network isolation, use `pasta` or `slirp4netns`:
 
 ```nix
-networkMode = "slirp4netns";
+networkMode = "pasta";       # userspace NAT, some overhead
+networkMode = "slirp4netns"; # older alternative to pasta
 ```
 
 ### Permission denied on workspace files
