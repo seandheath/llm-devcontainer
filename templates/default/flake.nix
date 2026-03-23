@@ -17,9 +17,12 @@
         # Get mkDevContainer from llm-devcontainer
         containerLib = llm-devcontainer.lib.mkDevContainer { inherit pkgs; };
 
+        # Project name - update this for your project
+        projectName = "my-project";  # TODO: Update project name
+
         # Generate container runners for this project
         container = containerLib.mkDevContainer {
-          name = "my-project";  # TODO: Update project name
+          name = projectName;
           projectPath = toString ./.;
 
           # Optional: Enable USB passthrough for hardware development
@@ -53,7 +56,13 @@
             # Add your project's native dependencies here
           ];
           shellHook = ''
-            echo "Claude Code available via container. Run: claude"
+            export LLM_DEVCONTAINER=1
+            export LLM_PROJECT_NAME="${projectName}"
+            if [[ -n "$ZSH_VERSION" ]]; then
+              export PROMPT="%F{cyan}[${projectName}]%f $PROMPT"
+            elif [[ -n "$BASH_VERSION" ]]; then
+              export PS1="\[\033[36m\][${projectName}]\[\033[0m\] $PS1"
+            fi
           '';
         };
 
