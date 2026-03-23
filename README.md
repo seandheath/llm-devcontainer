@@ -11,7 +11,6 @@ llm-devcontainer provides isolated, reproducible development environments for Cl
 - Read-only root filesystem
 - Persistent credential storage
 - Host Nix store sharing (no re-downloading packages)
-- USB device passthrough for hardware development
 
 ## Quick Start
 
@@ -47,9 +46,13 @@ new-project() {
     # Set project name in flake.nix
     sed -i "s/projectName = \"my-project\"/projectName = \"$name\"/" flake.nix
 
+    # Build container image if needed
     if ! podman image exists llm-devcontainer:latest; then
         nix run github:seandheath/llm-devcontainer#build
     fi
+
+    # Pre-build shell/claude apps to avoid lag on first run
+    nix build .#shell .#claude --no-link
 }
 ```
 
@@ -64,6 +67,7 @@ programs.bash.initExtra = ''
       if ! podman image exists llm-devcontainer:latest; then
           nix run github:seandheath/llm-devcontainer#build
       fi
+      nix build .#shell .#claude --no-link
   }
 '';
 ```
@@ -109,29 +113,10 @@ containerLib.mkDevContainer {
 
   # Optional settings
   image = "llm-devcontainer:latest";  # Container image
-  enableUSB = false;             # USB device passthrough
-  usbDevices = [];               # Vendor:product patterns ["0483:374b"]
   extraMounts = [];              # Additional volume mounts
   extraEnv = {};                 # Environment variables
   networkMode = "pasta";         # Network: pasta, slirp4netns, host
   extraArgs = [];                # Additional podman arguments
-}
-```
-
-### USB Device Passthrough
-
-For hardware development (embedded, microcontrollers):
-
-```nix
-containerLib.mkDevContainer {
-  name = "firmware-project";
-  projectPath = toString ./.;
-  enableUSB = true;
-  usbDevices = [
-    "0483:374b"  # ST-Link V2.1
-    "1a86:7523"  # CH340 USB-Serial
-    "10c4:ea60"  # CP2102
-  ];
 }
 ```
 
@@ -156,7 +141,6 @@ make fmt
 |------|-------------|
 | `flake.nix` | Main flake with packages, apps, templates |
 | `lib/mkDevContainer.nix` | Core container generation function |
-| `lib/egress-proxy.nix` | Egress filtering (stub) |
 | `packages/base-image.nix` | Nix-built OCI base image |
 | `container/Containerfile` | Stage 2: Claude Code installation |
 | `container/entrypoint.sh` | Container initialization script |
