@@ -4,8 +4,7 @@
 # Responsibilities:
 # 1. Verify /nix/store is properly mounted
 # 2. Set up home directory (volume at runtime, dotfiles from /etc/skel)
-# 3. Initialize direnv if present
-# 4. Execute requested command or shell
+# 3. Execute requested command or shell
 #
 # Volume layout:
 # - /home/developer is a volume (writable, persists per-project)
@@ -64,16 +63,6 @@ setup_home() {
     mkdir -p "$HOME/.config"
 }
 
-# Initialize direnv if present
-setup_direnv() {
-    if command -v direnv &>/dev/null; then
-        # Hook direnv into shells
-        eval "$(direnv hook bash)" 2>/dev/null || true
-        # Note: We don't auto-allow workspace .envrc because it typically
-        # contains `use flake` which tries to run nix inside the container.
-        # The container already provides the dev environment.
-    fi
-}
 
 # Main entrypoint logic
 main() {
@@ -81,7 +70,6 @@ main() {
 
     verify_nix_store
     setup_home
-    setup_direnv
 
     log_info "Container ready"
 
