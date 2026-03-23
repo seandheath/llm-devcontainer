@@ -50,16 +50,15 @@ Provide a secure, reproducible container environment for running Claude Code in 
 |-------|---------|------|
 | `/nix/store` | Nix packages | ro |
 | `/<project-name>` | Project directory (matches host folder name) | rw |
-| `/auth` | Credential persistence | rw |
-| `/host-config/*` | Global Claude config | ro |
+| `/home/developer` | Ephemeral home directory | rw |
+| `/home/developer/.claude` | Credential persistence (named volume) | rw |
 
 ### Credential Management
 
 Claude stores credentials in `~/.claude/`. In the container:
-1. `~/.claude` is tmpfs (ephemeral)
-2. `/auth` is a named Podman volume (persistent)
-3. Entrypoint creates symlinks: `~/.claude/credentials.json -> /auth/.claude/credentials.json`
-4. Credentials persist across container restarts
+1. `/home/developer` is an ephemeral volume (fresh each session)
+2. `~/.claude` is a named Podman volume mounted on top (persistent)
+3. Credentials persist across container restarts
 
 ### USB Passthrough
 

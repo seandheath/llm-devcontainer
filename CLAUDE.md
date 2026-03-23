@@ -13,7 +13,7 @@ flake.nix                     # Main entry point
 ├── packages/base-image.nix   # Nix-built OCI base layers
 ├── container/
 │   ├── Containerfile         # Stage 2: npm install claude-code
-│   ├── entrypoint.sh         # Init: credentials, nix store verification
+│   ├── entrypoint.sh         # Init: nix store verification, home setup
 │   └── zshrc                 # Shell config
 ├── templates/default/        # User project template
 └── apps/test.nix             # Test suite
@@ -23,7 +23,7 @@ flake.nix                     # Main entry point
 
 1. **Two-stage build**: Nix builds base image, Containerfile adds npm packages (avoids nix sandbox network issues)
 
-2. **Preemptive credential symlinks**: entrypoint.sh creates symlinks to auth volume BEFORE Claude runs
+2. **Direct credential volume mount**: Auth volume mounted at `~/.claude` for credential persistence
 
 3. **Host /nix/store sharing**: `-v /nix/store:/nix/store:ro` avoids re-downloading packages
 

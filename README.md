@@ -101,7 +101,7 @@ This avoids Nix sandbox network restrictions while keeping most of the image det
 
 ### Credential Persistence
 
-Claude credentials are stored in a named Podman volume (`claude-auth-${project}`). The entrypoint script creates symlinks from `~/.claude/` to this volume before Claude runs, ensuring credentials persist across container restarts.
+Claude credentials are stored in a named Podman volume (`claude-auth-${project}`) mounted directly at `~/.claude`. This volume persists across container restarts while keeping the rest of the home directory ephemeral.
 
 ### Dynamic Workspace
 
