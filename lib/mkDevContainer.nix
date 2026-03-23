@@ -88,17 +88,14 @@ in
         NETWORK="--network=${networkMode}"
 
         # Writable tmpfs mounts for runtime data
-        # These paths need to be writable but don't persist
-        # Home dir as tmpfs allows claude to write ~/.claude.json etc
-        # Entrypoint restores dotfiles from /etc/skel
         TMPFS=(
           "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g"
           "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m"
           "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m"
-          "--tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g"
         )
 
         # Core volume mounts
+        # :U tells podman to chown contents to match container user
         MOUNTS=(
           # Nix store - read-only, shared with host
           "-v" "/nix/store:/nix/store:ro"
@@ -106,8 +103,11 @@ in
           # Project workspace - read-write
           "-v" "${projectPath}:/workspace:rw"
 
-          # Auth volume mounted directly at ~/.claude for credential persistence
-          # :U tells podman to chown contents to match container user
+          # Home directory as volume (writable, ownership fixed by :U)
+          # This is ephemeral - created fresh each run
+          "-v" "llm-devcontainer-home-${sanitizedName}:/home/developer:rw,U"
+
+          # Auth volume for credential persistence (overlays on home)
           "-v" "${authVolume}:/home/developer/.claude:rw,U"
         )
       '';
@@ -182,7 +182,8 @@ in
             ;;
         esac
 
-        # Ensure auth volume exists
+        # Ensure volumes exist
+        podman volume create "llm-devcontainer-home-${sanitizedName}" 2>/dev/null || true
         podman volume create "${authVolume}" 2>/dev/null || true
 
         # Construct final podman command
@@ -230,7 +231,8 @@ in
 
         CONTAINER_NAME="llm-devcontainer-${sanitizedName}"
 
-        # Ensure auth volume exists
+        # Ensure volumes exist
+        podman volume create "llm-devcontainer-home-${sanitizedName}" 2>/dev/null || true
         podman volume create "${authVolume}" 2>/dev/null || true
 
         # Check if already running

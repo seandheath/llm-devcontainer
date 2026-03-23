@@ -143,9 +143,9 @@
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
+                -v llm-devcontainer-home-default:/home/developer:rw,U \
                 llm-devcontainer:latest \
                 "$@"
             '');
@@ -163,8 +163,9 @@
                 nix run ${self}#build
               fi
 
-              # Create auth volume if needed
+              # Create volumes if needed
               podman volume create claude-auth-default 2>/dev/null || true
+              podman volume create llm-devcontainer-home-default 2>/dev/null || true
 
               exec podman run \
                 --rm \
@@ -177,10 +178,10 @@
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer:rw,exec,nosuid,nodev,size=4g \
                 -v /nix/store:/nix/store:ro \
                 -v "$HOME/.claude:/host-claude:ro" \
                 -v "$(pwd):/workspace:rw" \
+                -v llm-devcontainer-home-default:/home/developer:rw,U \
                 -v claude-auth-default:/home/developer/.claude:rw,U \
                 llm-devcontainer:latest \
                 claude "$@"
