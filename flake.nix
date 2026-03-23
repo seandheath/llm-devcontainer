@@ -95,11 +95,15 @@
             program = toString (pkgs.writeShellScript "llm-devcontainer-build" ''
               set -euo pipefail
 
+              # Use temp dir for build artifacts
+              TMPDIR=$(mktemp -d)
+              trap "rm -rf $TMPDIR" EXIT
+
               echo "[llm-devcontainer] Stage 1: Building Nix base image..."
-              nix build ${self}#base-image --out-link result-base-image
+              nix build ${self}#base-image --out-link "$TMPDIR/result"
 
               echo "[llm-devcontainer] Loading base image into podman..."
-              podman load < result-base-image
+              podman load < "$TMPDIR/result"
 
               echo "[llm-devcontainer] Stage 2: Building final image with Claude Code..."
               podman build \
