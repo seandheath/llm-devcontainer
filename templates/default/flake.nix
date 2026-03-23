@@ -6,10 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     # nix-sandbox provides container infrastructure
-    # Update this to point to your nix-sandbox location:
-    # - Local:  nix-sandbox.url = "path:/path/to/nix-sandbox";
-    # - Git:    nix-sandbox.url = "github:user/nix-sandbox";
-    nix-sandbox.url = "github:user/nix-sandbox";  # TODO: Update this
+    nix-sandbox.url = "github:seandheath/llm-devcontainer";
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-sandbox }:
