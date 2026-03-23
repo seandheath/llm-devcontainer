@@ -11,6 +11,7 @@ llm-devcontainer provides isolated, reproducible development environments for Cl
 - Read-only root filesystem
 - Persistent credential storage
 - Host Nix store sharing (no re-downloading packages)
+- Dynamic workspace path (`/<project-name>` inside container matches host folder)
 
 ## Quick Start
 
@@ -96,11 +97,15 @@ This avoids Nix sandbox network restrictions while keeping most of the image det
 - **No capabilities:** `--cap-drop=ALL` removes all Linux capabilities
 - **No privilege escalation:** `--security-opt=no-new-privileges`
 - **User namespace isolation:** `--userns=keep-id` maps container UID to host UID
-- **Minimal writable paths:** Only `/tmp`, `/var`, `~/.cache`, `~/.local`, and workspace are writable (via tmpfs or bind mounts)
+- **Minimal writable paths:** Only `/tmp`, `/var`, `/run`, home directory, and project workspace are writable (via tmpfs or volumes)
 
 ### Credential Persistence
 
 Claude credentials are stored in a named Podman volume (`claude-auth-${project}`). The entrypoint script creates symlinks from `~/.claude/` to this volume before Claude runs, ensuring credentials persist across container restarts.
+
+### Dynamic Workspace
+
+The project directory is mounted at `/<project-name>` inside the container, matching the host folder name. This makes paths in Claude's output directly usable on the host system.
 
 ## Configuration
 
