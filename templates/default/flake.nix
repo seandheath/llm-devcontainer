@@ -40,13 +40,21 @@
           # };
         };
 
+        # Wrapper script to run containerized claude
+        claudeWrapper = pkgs.writeShellScriptBin "claude" ''
+          exec ${container.claude} "$@"
+        '';
+
       in {
-        # Development shell (native, for when container isn't needed)
+        # Development shell with containerized claude
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          buildInputs = [
+            claudeWrapper
             # Add your project's native dependencies here
-            # This shell is for quick tasks that don't need container isolation
           ];
+          shellHook = ''
+            echo "Claude Code available via container. Run: claude"
+          '';
         };
 
         # Apps for container-based development
