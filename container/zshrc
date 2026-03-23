@@ -1,0 +1,170 @@
+# zshrc for nix-sandbox development container
+#
+# Minimal but functional configuration for Claude Code development.
+# Includes direnv integration and useful aliases.
+
+# ----- History -----
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+
+# ----- Completion -----
+autoload -Uz compinit
+# Only regenerate completion dump once per day
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+else
+    compinit -C
+fi
+
+# Case-insensitive completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# Menu selection for completions
+zstyle ':completion:*' menu select
+
+# ----- Key Bindings -----
+# Use emacs-style keybindings
+bindkey -e
+
+# Home/End keys
+bindkey '^[[H' beginning-of-line
+bindkey '^[[F' end-of-line
+bindkey '^[[1~' beginning-of-line
+bindkey '^[[4~' end-of-line
+
+# Delete key
+bindkey '^[[3~' delete-char
+
+# Word navigation
+bindkey '^[[1;5C' forward-word
+bindkey '^[[1;5D' backward-word
+
+# ----- Prompt -----
+# Simple, informative prompt showing container context
+setopt PROMPT_SUBST
+
+# Git branch helper
+git_branch() {
+    local branch
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+    [[ -n "$branch" ]] && echo " ($branch)"
+}
+
+# Prompt colors
+local prompt_user="%F{cyan}%n%f"
+local prompt_host="%F{magenta}nix-sandbox%f"
+local prompt_dir="%F{blue}%~%f"
+local prompt_git="%F{yellow}\$(git_branch)%f"
+local prompt_char="%(?:%F{green}:%F{red})❯%f"
+
+# Final prompt
+PROMPT="${prompt_user}@${prompt_host}:${prompt_dir}${prompt_git}
+${prompt_char} "
+
+# Right prompt: show nix shell indicator
+RPROMPT='${IN_NIX_SHELL:+%F{cyan}[nix]%f}'
+
+# ----- Direnv -----
+# Hook direnv into the shell for automatic environment loading
+if command -v direnv &>/dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
+# ----- Environment -----
+export EDITOR="${EDITOR:-nvim}"
+export VISUAL="$EDITOR"
+export PAGER="${PAGER:-less}"
+export LESS="-R -F -X"
+
+# Nix paths (should already be set, but ensure)
+export NIX_SSL_CERT_FILE="${NIX_SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}"
+
+# npm config
+export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# ----- Aliases -----
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Listing
+alias ls='ls --color=auto'
+alias ll='ls -lah'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Safety
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Git shortcuts
+alias g='git'
+alias gs='git status'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline -20'
+alias gco='git checkout'
+alias gb='git branch'
+
+# Nix shortcuts
+alias nb='nix build'
+alias nd='nix develop'
+alias nf='nix flake'
+alias nr='nix run'
+alias ns='nix search nixpkgs'
+
+# Claude Code
+alias c='claude'
+alias cc='claude --continue'
+alias cr='claude --resume'
+
+# Development
+alias m='make'
+alias mb='make build'
+alias mt='make test'
+alias mc='make clean'
+
+# ----- Functions -----
+
+# Quick directory creation and cd
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Find files by name
+ff() {
+    find . -type f -name "*$1*" 2>/dev/null
+}
+
+# Find directories by name
+fd() {
+    find . -type d -name "*$1*" 2>/dev/null
+}
+
+# Grep with color and line numbers
+gg() {
+    grep -rn --color=auto "$@" .
+}
+
+# ----- Container Info -----
+# Show helpful info on first shell
+if [[ ! -f ~/.hushlogin ]]; then
+    echo ""
+    echo "  nix-sandbox development container"
+    echo "  ─────────────────────────────────"
+    echo "  Workspace: /workspace"
+    echo "  Claude:    claude --help"
+    echo "  Nix:       nix develop"
+    echo ""
+fi

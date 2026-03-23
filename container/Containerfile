@@ -1,0 +1,60 @@
+# Stage 2: Install Claude Code on top of Nix base image
+#
+# This Containerfile builds on the Nix-generated base image to install
+# Claude Code via npm. We use a separate stage because npm install
+# requires network access which is restricted in Nix's build sandbox.
+#
+# Build with:
+#   podman build -t nix-sandbox:latest -f container/Containerfile .
+#
+# Prerequisites:
+#   - Base image must be loaded: nix build .#base-image && podman load < result
+
+ARG BASE_IMAGE=nix-sandbox-base:latest
+FROM ${BASE_IMAGE}
+
+# Metadata
+LABEL org.opencontainers.image.title="nix-sandbox"
+LABEL org.opencontainers.image.description="Claude Code development container with Nix"
+LABEL org.opencontainers.image.version="1.0.0"
+
+# Switch to root for installation
+USER root
+
+# Create npm global directory with correct permissions
+RUN mkdir -p /home/developer/.npm-global && \
+    chown -R 1000:1000 /home/developer/.npm-global
+
+# Configure npm to use user-local global directory
+# This avoids permission issues and keeps globals in home
+ENV NPM_CONFIG_PREFIX=/home/developer/.npm-global
+ENV PATH="/home/developer/.npm-global/bin:${PATH}"
+
+# Switch to developer user for npm install
+USER developer
+WORKDIR /home/developer
+
+# Install Claude Code globally
+# We pin to a specific version for reproducibility in production,
+# but use @latest during development
+RUN npm install -g @anthropic-ai/claude-code && \
+    # Verify installation
+    claude --version && \
+    # Clean npm cache to reduce image size
+    npm cache clean --force
+
+# Copy container runtime files
+COPY --chown=1000:1000 container/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=1000:1000 container/zshrc /home/developer/.zshrc
+
+# Ensure entrypoint is executable
+USER root
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Final configuration
+USER developer
+WORKDIR /workspace
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/zsh"]
