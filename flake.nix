@@ -136,6 +136,9 @@
                 nix run ${self}#build
               fi
 
+              # Workspace name from current directory
+              WORKSPACE="/$(basename "$(pwd)")"
+
               exec podman run \
                 --rm \
                 -it \
@@ -144,11 +147,12 @@
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \
+                -w "$WORKSPACE" \
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
                 -v /nix/store:/nix/store:ro \
-                -v "$(pwd):/workspace:rw" \
+                -v "$(pwd):$WORKSPACE:rw" \
                 -v llm-devcontainer-home-default:/home/developer:rw,U \
                 llm-devcontainer:latest \
                 "$@"
@@ -171,6 +175,9 @@
               podman volume create claude-auth-default 2>/dev/null || true
               podman volume create llm-devcontainer-home-default 2>/dev/null || true
 
+              # Workspace name from current directory
+              WORKSPACE="/$(basename "$(pwd)")"
+
               # Build CLAUDE.md mount if it exists
               CLAUDE_MD_MOUNT=""
               if [[ -f "$HOME/.claude/CLAUDE.md" ]]; then
@@ -185,11 +192,12 @@
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \
+                -w "$WORKSPACE" \
                 --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
                 --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
                 --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
                 -v /nix/store:/nix/store:ro \
-                -v "$(pwd):/workspace:rw" \
+                -v "$(pwd):$WORKSPACE:rw" \
                 -v llm-devcontainer-home-default:/home/developer:rw,U \
                 -v claude-auth-default:/home/developer/.claude:rw,U \
                 $CLAUDE_MD_MOUNT \

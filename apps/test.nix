@@ -165,7 +165,7 @@ pkgs.writeShellScript "llm-devcontainer-test" ''
     log_fail "Root filesystem is writable (security issue)"
   fi
 
-  # Test 7: Workspace mount works
+  # Test 7: Workspace mount works (uses dynamic path like real containers)
   log_test "Workspace volume mounting..."
   echo "test content" > "$TEST_DIR/test.txt"
   if ${pkgs.podman}/bin/podman run --rm \
@@ -173,13 +173,14 @@ pkgs.writeShellScript "llm-devcontainer-test" ''
       --read-only \
       --cap-drop=ALL \
       --security-opt=no-new-privileges \
+      -w /test-project \
       --tmpfs=/tmp:rw,exec \
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      -v "$TEST_DIR:/workspace:rw" \
+      -v "$TEST_DIR:/test-project:rw" \
       llm-devcontainer:latest \
-      cat /workspace/test.txt 2>/dev/null | grep -q "test content"; then
+      cat /test-project/test.txt 2>/dev/null | grep -q "test content"; then
     log_pass "Workspace mount works"
   else
     log_fail "Workspace mount failed"
@@ -192,13 +193,14 @@ pkgs.writeShellScript "llm-devcontainer-test" ''
       --read-only \
       --cap-drop=ALL \
       --security-opt=no-new-privileges \
+      -w /test-project \
       --tmpfs=/tmp:rw,exec \
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      -v "$TEST_DIR:/workspace:rw" \
+      -v "$TEST_DIR:/test-project:rw" \
       llm-devcontainer:latest \
-      sh -c 'echo "written from container" > /workspace/output.txt' && \
+      sh -c 'echo "written from container" > /test-project/output.txt' && \
     grep -q "written from container" "$TEST_DIR/output.txt"; then
     log_pass "Workspace is writable"
   else

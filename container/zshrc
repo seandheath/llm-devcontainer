@@ -156,7 +156,7 @@ if [[ ! -f ~/.hushlogin ]]; then
     echo ""
     echo "  llm-devcontainer development container"
     echo "  ─────────────────────────────────"
-    echo "  Workspace: /workspace"
+    echo "  Workspace: $PWD"
     echo "  Claude:    claude --help"
     echo "  Nix:       nix develop"
     echo ""

@@ -132,9 +132,6 @@ in pkgs.dockerTools.buildLayeredImage {
     mkdir -p home/${user}/.local/share home/${user}/.local/state
     mkdir -p home/${user}/.npm home/${user}/.claude
 
-    # Workspace mount point
-    mkdir -p workspace
-
     # System directories - remove existing symlinks if present
     rm -rf etc/nix etc/ssl etc/zsh etc/profile.d
     mkdir -p etc/nix etc/ssl/certs etc/zsh etc/profile.d
@@ -164,7 +161,8 @@ in pkgs.dockerTools.buildLayeredImage {
   config = {
     # Default user (overridden by --userns=keep-id)
     User = user;
-    WorkingDir = "/workspace";
+    # Working directory set at runtime via podman -w flag
+    WorkingDir = home;
 
     Env = [
       "HOME=${home}"

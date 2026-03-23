@@ -56,7 +56,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Final configuration
 USER developer
-WORKDIR /workspace
+# Working directory set at runtime via podman -w flag
+WORKDIR /home/developer
 
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

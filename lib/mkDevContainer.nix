@@ -94,14 +94,17 @@ in
           "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m"
         )
 
-        # Core volume mounts
+        # Workspace path inside container matches project name
+      WORKSPACE="/${sanitizedName}"
+
+      # Core volume mounts
         # :U tells podman to chown contents to match container user
         MOUNTS=(
           # Nix store - read-only, shared with host
           "-v" "/nix/store:/nix/store:ro"
 
-          # Project workspace - read-write
-          "-v" "${projectPath}:/workspace:rw"
+          # Project workspace - read-write, mounted at /<project-name>
+          "-v" "${projectPath}:$WORKSPACE:rw"
 
           # Home directory as volume (writable, ownership fixed by :U)
           # This is ephemeral - created fresh each run
@@ -191,6 +194,7 @@ in
           -it \
           --name "$CONTAINER_NAME" \
           --hostname "llm-devcontainer" \
+          -w "$WORKSPACE" \
           $USERNS \
           $NETWORK \
           "''${SECURITY[@]}" \
@@ -246,6 +250,7 @@ in
           -d \
           --name "$CONTAINER_NAME" \
           --hostname "llm-devcontainer" \
+          -w "$WORKSPACE" \
           $USERNS \
           $NETWORK \
           "''${SECURITY[@]}" \

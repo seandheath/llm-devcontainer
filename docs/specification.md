@@ -49,7 +49,7 @@ Provide a secure, reproducible container environment for running Claude Code in 
 | Mount | Purpose | Mode |
 |-------|---------|------|
 | `/nix/store` | Nix packages | ro |
-| `/workspace` | Project directory | rw |
+| `/<project-name>` | Project directory (matches host folder name) | rw |
 | `/auth` | Credential persistence | rw |
 | `/host-config/*` | Global Claude config | ro |
 
