@@ -9,7 +9,7 @@
 # - Drop all capabilities (--cap-drop ALL)
 # - User namespace isolation (--userns=keep-id)
 # - Minimal writable paths via tmpfs
-# - Persistent auth volume for credentials
+# - Persistent auth volume for credentials (~/.claude)
 #
 # References:
 # - https://docs.podman.io/en/latest/markdown/podman-run.1.html
@@ -29,48 +29,6 @@ let
       fi
     '';
 
-  # Helper to detect USB devices matching vendor:product patterns
-  # Returns --device flags for each matching device
-  usbDeviceDetection = vendorProductPairs: ''
-    # USB device detection
-    # Scans /sys/bus/usb/devices/ for matching vendor:product IDs
-    detect_usb_devices() {
-      local devices=()
-      for dev in /sys/bus/usb/devices/*/; do
-        [[ -f "$dev/idVendor" ]] || continue
-        [[ -f "$dev/idProduct" ]] || continue
-
-        local vendor=$(cat "$dev/idVendor" 2>/dev/null)
-        local product=$(cat "$dev/idProduct" 2>/dev/null)
-        local vid_pid="$vendor:$product"
-
-        # Check against known device patterns
-        case "$vid_pid" in
-          ${lib.concatMapStringsSep "|" (p: "\"${p}\"") vendorProductPairs})
-            # Find the /dev node for this USB device
-            for tty in "$dev"/tty*/; do
-              [[ -d "$tty" ]] || continue
-              local devname=$(basename "$tty")
-              if [[ -c "/dev/$devname" ]]; then
-                devices+=("--device=/dev/$devname")
-              fi
-            done
-            # Check for generic USB device nodes
-            local devnum=$(cat "$dev/devnum" 2>/dev/null)
-            local busnum=$(cat "$dev/busnum" 2>/dev/null)
-            if [[ -n "$devnum" && -n "$busnum" ]]; then
-              local usbdev="/dev/bus/usb/$(printf '%03d' "$busnum")/$(printf '%03d' "$devnum")"
-              if [[ -c "$usbdev" ]]; then
-                devices+=("--device=$usbdev")
-              fi
-            fi
-            ;;
-        esac
-      done
-      echo "''${devices[@]}"
-    }
-  '';
-
 in
 {
   # Main function to create a development container configuration
@@ -79,8 +37,6 @@ in
   #   name          - Project name (used for auth volume naming)
   #   projectPath   - Absolute path to project directory on host
   #   image         - Container image name (default: llm-devcontainer:latest)
-  #   enableUSB     - Enable USB device passthrough (default: false)
-  #   usbDevices    - List of vendor:product patterns (e.g., ["1234:5678"])
   #   extraMounts   - Additional volume mounts [{host, container, opts}]
   #   extraEnv      - Additional environment variables {NAME = "value"}
   #   networkMode   - Network mode: "pasta", "slirp4netns", "host" (default: "pasta")
@@ -92,8 +48,6 @@ in
     { name
     , projectPath
     , image ? "llm-devcontainer:latest"
-    , enableUSB ? false
-    , usbDevices ? []
     , extraMounts ? []
     , extraEnv ? {}
     , networkMode ? "pasta"
@@ -105,12 +59,8 @@ in
       sanitizedName = lib.replaceStrings [" " "/" "\\"] ["-" "-" "-"] name;
 
       # Auth volume name - persists credentials across container runs
+      # Mounted directly at ~/.claude for simplicity
       authVolume = "claude-auth-${sanitizedName}";
-
-      # Build environment variable flags
-      envFlags = lib.concatStringsSep " " (
-        lib.mapAttrsToList (k: v: ''-e "${k}=${v}"'') extraEnv
-      );
 
       # Build extra mount flags
       extraMountFlags = lib.concatMapStringsSep " \\\n    " (m:
@@ -140,14 +90,16 @@ in
 
         # Writable tmpfs mounts for runtime data
         # These paths need to be writable but don't persist
+        # uid/gid ensure correct ownership with --userns=keep-id
+        HOST_UID=$(id -u)
+        HOST_GID=$(id -g)
         TMPFS=(
-          "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g"
-          "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m"
-          "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m"
-          "--tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g"
-          "--tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g"
-          "--tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m"
-          "--tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m"
+          "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/var:rw,noexec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/run:rw,noexec,nosuid,nodev,size=64m,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g,uid=$HOST_UID,gid=$HOST_GID"
+          "--tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID"
         )
 
         # Core volume mounts
@@ -158,18 +110,13 @@ in
           # Project workspace - read-write
           "-v" "${projectPath}:/workspace:rw"
 
-          # Auth volume for credential persistence
-          "-v" "${authVolume}:/auth:rw"
+          # Auth volume mounted directly at ~/.claude for credential persistence
+          "-v" "${authVolume}:/home/developer/.claude:rw"
         )
       '';
 
       # Conditional host config mounts
       hostConfigMounts = ''
-        # Host Claude config (global CLAUDE.md, etc.)
-        # Only mount if files exist on host
-        ${conditionalMount "$HOME/.claude/CLAUDE.md" "/host-config/CLAUDE.md" "ro"}
-        ${conditionalMount "$HOME/.claude/settings.json" "/host-config/settings.json" "ro"}
-
         # SSH config for git operations (read-only)
         ${conditionalMount "$HOME/.ssh" "/home/developer/.ssh" "ro"}
 
@@ -178,35 +125,29 @@ in
         ${conditionalMount "$HOME/.config/git" "/home/developer/.config/git" "ro"}
       '';
 
-      # USB device handling (only for dev-hw variant)
-      usbHandling = if enableUSB then ''
-        ${usbDeviceDetection usbDevices}
-
-        # Detect and add USB devices
-        USB_DEVICES=($(detect_usb_devices))
-        if [[ ''${#USB_DEVICES[@]} -gt 0 ]]; then
-          echo "[llm-devcontainer] Found USB devices: ''${USB_DEVICES[*]}"
-        fi
-      '' else ''
-        USB_DEVICES=()
-      '';
-
-      # Build the complete run script
-      runScript = variant: pkgs.writeShellScript "llm-devcontainer-${variant}" ''
+      # Build the interactive run script
+      # mode parameter controls behavior: "shell" (default), "claude"
+      runScript = pkgs.writeShellScript "llm-devcontainer-run" ''
         #!/usr/bin/env bash
-        # llm-devcontainer container launcher (${variant})
+        # llm-devcontainer container launcher
         # Generated by mkDevContainer.nix
         #
         # Project: ${name}
         # Workspace: ${projectPath}
+        #
+        # Usage:
+        #   llm-devcontainer-run [shell|claude] [args...]
+        #   llm-devcontainer-run shell        # Interactive shell (default)
+        #   llm-devcontainer-run claude ...   # Run claude with args
 
         set -euo pipefail
+
+        MODE="''${1:-shell}"
+        shift 2>/dev/null || true
 
         ${coreArgs}
 
         ${hostConfigMounts}
-
-        ${usbHandling}
 
         # Extra mounts from configuration
         ${if extraMounts != [] then ''
@@ -228,22 +169,33 @@ in
           ${lib.concatMapStringsSep "\n          " (a: ''"${a}"'') extraArgs}
         )
 
+        # Determine container name and command based on mode
+        case "$MODE" in
+          claude)
+            CONTAINER_NAME="llm-devcontainer-claude-${sanitizedName}"
+            CMD=(claude --dangerously-skip-permissions "$@")
+            ;;
+          shell|*)
+            CONTAINER_NAME="llm-devcontainer-${sanitizedName}"
+            CMD=("$@")
+            ;;
+        esac
+
         # Construct final podman command
         exec podman run \
           --rm \
           -it \
-          --name "llm-devcontainer-${sanitizedName}" \
+          --name "$CONTAINER_NAME" \
           --hostname "llm-devcontainer" \
           $USERNS \
           $NETWORK \
           "''${SECURITY[@]}" \
           "''${TMPFS[@]}" \
           "''${MOUNTS[@]}" \
-          "''${USB_DEVICES[@]}" \
           "''${ENV_VARS[@]}" \
           "''${EXTRA_ARGS[@]}" \
           "$IMAGE" \
-          "$@"
+          "''${CMD[@]}"
       '';
 
       # Script to start container in detached mode
@@ -255,8 +207,6 @@ in
         ${coreArgs}
 
         ${hostConfigMounts}
-
-        ${usbHandling}
 
         ${if extraMounts != [] then ''
         MOUNTS+=(
@@ -293,7 +243,6 @@ in
           "''${SECURITY[@]}" \
           "''${TMPFS[@]}" \
           "''${MOUNTS[@]}" \
-          "''${USB_DEVICES[@]}" \
           "''${ENV_VARS[@]}" \
           "''${EXTRA_ARGS[@]}" \
           "$IMAGE" \
@@ -304,68 +253,26 @@ in
         echo "[llm-devcontainer] Exec shell:  podman exec -it $CONTAINER_NAME /bin/zsh"
       '';
 
-      # Script to run claude directly
-      claudeScript = pkgs.writeShellScript "llm-devcontainer-claude" ''
-        #!/usr/bin/env bash
-        # Run Claude Code directly in container
-        set -euo pipefail
+    in {
+      # Main run script - supports shell and claude modes
+      run = runScript;
 
-        ${coreArgs}
-
-        ${hostConfigMounts}
-
-        ${if extraMounts != [] then ''
-        MOUNTS+=(
-          ${extraMountFlags}
-        )
-        '' else ""}
-
-        ENV_VARS=(
-          ${lib.concatStringsSep "\n          " (
-            lib.mapAttrsToList (k: v: ''"-e" "${k}=${v}"'') extraEnv
-          )}
-        )
-
-        EXTRA_ARGS=(
-          ${lib.concatMapStringsSep "\n          " (a: ''"${a}"'') extraArgs}
-        )
-
-        exec podman run \
-          --rm \
-          -it \
-          --name "llm-devcontainer-claude-${sanitizedName}" \
-          --hostname "llm-devcontainer" \
-          $USERNS \
-          $NETWORK \
-          "''${SECURITY[@]}" \
-          "''${TMPFS[@]}" \
-          "''${MOUNTS[@]}" \
-          "''${ENV_VARS[@]}" \
-          "''${EXTRA_ARGS[@]}" \
-          "$IMAGE" \
-          claude --dangerously-skip-permissions "$@"
+      # Convenience aliases
+      shell = pkgs.writeShellScript "llm-devcontainer-shell" ''
+        exec ${runScript} shell "$@"
       '';
 
-    in {
-      # Interactive shell in container
-      shell = runScript "shell";
+      claude = pkgs.writeShellScript "llm-devcontainer-claude" ''
+        exec ${runScript} claude "$@"
+      '';
 
       # Detached container with attach capability
       detached = detachedScript;
 
-      # Direct claude invocation
-      claude = claudeScript;
-
-      # Development variant (same as shell for now)
-      dev = runScript "dev";
-
-      # Hardware development variant (USB passthrough)
-      devHw = runScript "dev-hw";
-
       # Metadata for introspection
       meta = {
         inherit name projectPath image authVolume;
-        inherit enableUSB usbDevices extraMounts extraEnv networkMode;
+        inherit extraMounts extraEnv networkMode;
       };
     };
 }

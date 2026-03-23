@@ -25,13 +25,6 @@
           name = projectName;
           projectPath = toString ./.;
 
-          # Optional: Enable USB passthrough for hardware development
-          # enableUSB = true;
-          # usbDevices = [
-          #   "0483:374b"  # ST-Link
-          #   "1a86:7523"  # CH340
-          # ];
-
           # Optional: Additional volume mounts
           # extraMounts = [
           #   { host = "/path/on/host"; container = "/path/in/container"; opts = "ro"; }
@@ -69,8 +62,8 @@
         # Apps for container-based development
         apps = {
           # Interactive shell in container
-          # Usage: nix run .#dev
-          dev = {
+          # Usage: nix run .#shell
+          shell = {
             type = "app";
             program = toString container.shell;
           };
@@ -88,17 +81,10 @@
             type = "app";
             program = toString container.detached;
           };
-
-          # Hardware development variant (if USB enabled)
-          # Usage: nix run .#dev-hw
-          dev-hw = {
-            type = "app";
-            program = toString container.devHw;
-          };
         };
 
-        # Default app is the dev shell
-        apps.default = self.apps.${system}.dev;
+        # Default app is the shell
+        apps.default = self.apps.${system}.shell;
       }
     );
 }

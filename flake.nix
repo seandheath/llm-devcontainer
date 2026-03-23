@@ -13,9 +13,6 @@
         # Core container generation function
         # Import and call with pkgs to get the actual function
         mkDevContainer = import ./lib/mkDevContainer.nix;
-
-        # Egress proxy configuration (stub)
-        egressProxy = import ./lib/egress-proxy.nix;
       };
 
     in
@@ -135,6 +132,10 @@
                 nix run ${self}#build
               fi
 
+              # Get host uid/gid for tmpfs ownership
+              HOST_UID=$(id -u)
+              HOST_GID=$(id -g)
+
               exec podman run \
                 --rm \
                 -it \
@@ -143,13 +144,13 @@
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \
-                --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
-                --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g \
-                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
-                --tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m \
+                --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m,uid=$HOST_UID,gid=$HOST_GID \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
                 llm-devcontainer:latest \
@@ -172,6 +173,10 @@
               # Create auth volume if needed
               podman volume create claude-auth-default 2>/dev/null || true
 
+              # Get host uid/gid for tmpfs ownership
+              HOST_UID=$(id -u)
+              HOST_GID=$(id -g)
+
               exec podman run \
                 --rm \
                 -it \
@@ -180,16 +185,15 @@
                 --read-only \
                 --cap-drop=ALL \
                 --security-opt=no-new-privileges \
-                --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m \
-                --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m \
-                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g \
-                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g \
-                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m \
-                --tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m \
+                --tmpfs=/tmp:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/var:rw,noexec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/run:rw,noexec,nosuid,nodev,size=64m,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.cache:rw,exec,nosuid,nodev,size=2g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.local:rw,exec,nosuid,nodev,size=1g,uid=$HOST_UID,gid=$HOST_GID \
+                --tmpfs=/home/developer/.npm:rw,exec,nosuid,nodev,size=512m,uid=$HOST_UID,gid=$HOST_GID \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
-                -v claude-auth-default:/auth:rw \
+                -v claude-auth-default:/home/developer/.claude:rw \
                 llm-devcontainer:latest \
                 claude "$@"
             '');
