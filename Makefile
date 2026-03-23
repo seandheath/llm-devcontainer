@@ -1,4 +1,4 @@
-# nix-sandbox Makefile
+# llm-devcontainer Makefile
 #
 # Standard targets for building, testing, and managing the project.
 
@@ -18,8 +18,8 @@ test:
 # Clean build artifacts and container images
 clean:
 	rm -f result result-*
-	podman rmi nix-sandbox:latest 2>/dev/null || true
-	podman rmi nix-sandbox-base:latest 2>/dev/null || true
+	podman rmi llm-devcontainer:latest 2>/dev/null || true
+	podman rmi llm-devcontainer-base:latest 2>/dev/null || true
 
 # Lint shell scripts and Nix files
 lint:
@@ -56,7 +56,7 @@ flake-info:
 
 # Help
 help:
-	@echo "nix-sandbox - Container-based Claude Code development environment"
+	@echo "llm-devcontainer - Container-based Claude Code development environment"
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""

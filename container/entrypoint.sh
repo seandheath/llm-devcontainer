@@ -1,5 +1,5 @@
 #!/bin/bash
-# Container entrypoint script for nix-sandbox
+# Container entrypoint script for llm-devcontainer
 #
 # Responsibilities:
 # 1. Verify /nix/store is properly mounted
@@ -161,7 +161,7 @@ fix_permissions() {
 
 # Main entrypoint logic
 main() {
-    log_info "Initializing nix-sandbox container"
+    log_info "Initializing llm-devcontainer container"
 
     verify_nix_store
     setup_credentials

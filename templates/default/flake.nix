@@ -1,21 +1,21 @@
 {
-  description = "Project using nix-sandbox for Claude Code development";
+  description = "Project using llm-devcontainer for Claude Code development";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
-    # nix-sandbox provides container infrastructure
-    nix-sandbox.url = "github:seandheath/llm-devcontainer";
+    # llm-devcontainer provides container infrastructure
+    llm-devcontainer.url = "github:seandheath/llm-devcontainer";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-sandbox }:
+  outputs = { self, nixpkgs, flake-utils, llm-devcontainer }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
 
-        # Get mkDevContainer from nix-sandbox
-        containerLib = nix-sandbox.lib.mkDevContainer { inherit pkgs; };
+        # Get mkDevContainer from llm-devcontainer
+        containerLib = llm-devcontainer.lib.mkDevContainer { inherit pkgs; };
 
         # Generate container runners for this project
         container = containerLib.mkDevContainer {

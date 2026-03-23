@@ -1,4 +1,4 @@
-# Test runner for nix-sandbox
+# Test runner for llm-devcontainer
 #
 # Verifies:
 # 1. Container starts successfully
@@ -10,7 +10,7 @@
 , self
 }:
 
-pkgs.writeShellScript "nix-sandbox-test" ''
+pkgs.writeShellScript "llm-devcontainer-test" ''
   set -euo pipefail
 
   # Colors
@@ -37,14 +37,14 @@ pkgs.writeShellScript "nix-sandbox-test" ''
   }
 
   # Ensure image exists
-  if ! ${pkgs.podman}/bin/podman image exists nix-sandbox:latest; then
-    echo "[nix-sandbox-test] Image not found, building..."
+  if ! ${pkgs.podman}/bin/podman image exists llm-devcontainer:latest; then
+    echo "[llm-devcontainer-test] Image not found, building..."
     nix run ${self}#build
   fi
 
   echo ""
   echo "═══════════════════════════════════════"
-  echo " nix-sandbox Test Suite"
+  echo " llm-devcontainer Test Suite"
   echo "═══════════════════════════════════════"
   echo ""
 
@@ -63,7 +63,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       echo "Container started successfully" >/dev/null 2>&1; then
     log_pass "Container starts"
   else
@@ -81,7 +81,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       sh -c 'test -d /nix/store && ls /nix/store | head -1 >/dev/null'; then
     log_pass "Nix store is accessible"
   else
@@ -101,7 +101,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.local:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       nix --version >/dev/null 2>&1; then
     log_pass "Nix command works"
   else
@@ -119,7 +119,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       claude --version >/dev/null 2>&1; then
     log_pass "Claude Code is installed"
   else
@@ -140,7 +140,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.local:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       /usr/local/bin/entrypoint.sh echo "Entrypoint works" 2>&1 | grep -q "Entrypoint works"; then
     log_pass "Entrypoint initializes correctly"
   else
@@ -158,7 +158,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.cache:rw \
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       sh -c 'touch /etc/test 2>&1 && exit 1 || exit 0'; then
     log_pass "Root filesystem is read-only"
   else
@@ -178,7 +178,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
       -v "$TEST_DIR:/workspace:rw" \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       cat /workspace/test.txt 2>/dev/null | grep -q "test content"; then
     log_pass "Workspace mount works"
   else
@@ -197,7 +197,7 @@ pkgs.writeShellScript "nix-sandbox-test" ''
       --tmpfs=/home/developer/.claude:rw \
       -v /nix/store:/nix/store:ro \
       -v "$TEST_DIR:/workspace:rw" \
-      nix-sandbox:latest \
+      llm-devcontainer:latest \
       sh -c 'echo "written from container" > /workspace/output.txt' && \
     grep -q "written from container" "$TEST_DIR/output.txt"; then
     log_pass "Workspace is writable"

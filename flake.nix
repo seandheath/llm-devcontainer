@@ -1,5 +1,5 @@
 {
-  description = "nix-sandbox: Container-based Claude Code development environment";
+  description = "llm-devcontainer: Container-based Claude Code development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -27,7 +27,7 @@
       templates = {
         default = {
           path = ./templates/default;
-          description = "Basic nix-sandbox project with Claude Code";
+          description = "Basic llm-devcontainer project with Claude Code";
         };
       };
 
@@ -45,7 +45,7 @@
         # Base image package
         baseImage = import ./packages/base-image.nix {
           inherit pkgs;
-          name = "nix-sandbox-base";
+          name = "llm-devcontainer-base";
           tag = "latest";
         };
 
@@ -59,7 +59,7 @@
           default = baseImage;
         };
 
-        # Development shell for working on nix-sandbox itself
+        # Development shell for working on llm-devcontainer itself
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Nix tools
@@ -81,7 +81,7 @@
 
           shellHook = ''
             echo ""
-            echo "nix-sandbox development shell"
+            echo "llm-devcontainer development shell"
             echo "────────────────────────────"
             echo "Build base image:  nix build .#base-image"
             echo "Run tests:         nix run .#test"
@@ -95,25 +95,25 @@
           # Two-stage build script
           build = {
             type = "app";
-            program = toString (pkgs.writeShellScript "nix-sandbox-build" ''
+            program = toString (pkgs.writeShellScript "llm-devcontainer-build" ''
               set -euo pipefail
 
-              echo "[nix-sandbox] Stage 1: Building Nix base image..."
+              echo "[llm-devcontainer] Stage 1: Building Nix base image..."
               nix build ${self}#base-image --out-link result-base-image
 
-              echo "[nix-sandbox] Loading base image into podman..."
+              echo "[llm-devcontainer] Loading base image into podman..."
               podman load < result-base-image
 
-              echo "[nix-sandbox] Stage 2: Building final image with Claude Code..."
+              echo "[llm-devcontainer] Stage 2: Building final image with Claude Code..."
               podman build \
-                -t nix-sandbox:latest \
+                -t llm-devcontainer:latest \
                 -f ${self}/container/Containerfile \
                 ${self}
 
-              echo "[nix-sandbox] Build complete!"
+              echo "[llm-devcontainer] Build complete!"
               echo ""
-              echo "Image: nix-sandbox:latest"
-              echo "Run:   podman run --rm -it nix-sandbox:latest"
+              echo "Image: llm-devcontainer:latest"
+              echo "Run:   podman run --rm -it llm-devcontainer:latest"
             '');
           };
 
@@ -126,12 +126,12 @@
           # Quick shell in a test container (for development)
           shell = {
             type = "app";
-            program = toString (pkgs.writeShellScript "nix-sandbox-shell" ''
+            program = toString (pkgs.writeShellScript "llm-devcontainer-shell" ''
               set -euo pipefail
 
               # Check if image exists
-              if ! podman image exists nix-sandbox:latest; then
-                echo "[nix-sandbox] Image not found, building..."
+              if ! podman image exists llm-devcontainer:latest; then
+                echo "[llm-devcontainer] Image not found, building..."
                 nix run ${self}#build
               fi
 
@@ -152,7 +152,7 @@
                 --tmpfs=/home/developer/.claude:rw,noexec,nosuid,nodev,size=64m \
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
-                nix-sandbox:latest \
+                llm-devcontainer:latest \
                 "$@"
             '');
           };
@@ -160,12 +160,12 @@
           # Run claude directly
           claude = {
             type = "app";
-            program = toString (pkgs.writeShellScript "nix-sandbox-claude" ''
+            program = toString (pkgs.writeShellScript "llm-devcontainer-claude" ''
               set -euo pipefail
 
               # Check if image exists
-              if ! podman image exists nix-sandbox:latest; then
-                echo "[nix-sandbox] Image not found, building..."
+              if ! podman image exists llm-devcontainer:latest; then
+                echo "[llm-devcontainer] Image not found, building..."
                 nix run ${self}#build
               fi
 
@@ -190,7 +190,7 @@
                 -v /nix/store:/nix/store:ro \
                 -v "$(pwd):/workspace:rw" \
                 -v claude-auth-default:/auth:rw \
-                nix-sandbox:latest \
+                llm-devcontainer:latest \
                 claude "$@"
             '');
           };

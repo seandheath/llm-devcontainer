@@ -1,4 +1,4 @@
-# nix-sandbox Specification
+# llm-devcontainer Specification
 
 ## Purpose
 
@@ -76,7 +76,7 @@ For hardware development:
 mkDevContainer {
   name: string;           # Project name
   projectPath: string;    # Absolute path to project
-  image?: string;         # Container image (default: "nix-sandbox:latest")
+  image?: string;         # Container image (default: "llm-devcontainer:latest")
   enableUSB?: bool;       # Enable USB passthrough (default: false)
   usbDevices?: [string];  # Vendor:product patterns
   extraMounts?: [{host, container, opts}];

@@ -1,10 +1,10 @@
-# nix-sandbox
+# llm-devcontainer
 
 Container-based Claude Code development environment with Nix.
 
 ## Overview
 
-nix-sandbox provides isolated, reproducible development environments for Claude Code. It uses Podman containers with Nix for dependency management, combining the security of containerization with the reproducibility of Nix.
+llm-devcontainer provides isolated, reproducible development environments for Claude Code. It uses Podman containers with Nix for dependency management, combining the security of containerization with the reproducibility of Nix.
 
 **Key features:**
 - Rootless containers with minimal attack surface
@@ -28,7 +28,7 @@ make container-shell
 
 ## Installation
 
-nix-sandbox is a standalone Nix flake. No host system changes required.
+llm-devcontainer is a standalone Nix flake. No host system changes required.
 
 ### Prerequisites
 
@@ -39,7 +39,7 @@ nix-sandbox is a standalone Nix flake. No host system changes required.
 
 1. Initialize from template:
    ```bash
-   nix flake init -t github:user/nix-sandbox
+   nix flake init -t github:seandheath/llm-devcontainer
    ```
 
 2. Edit `flake.nix` to configure your project name and options
@@ -82,7 +82,7 @@ containerLib.mkDevContainer {
   projectPath = toString ./.;    # Path to project directory
 
   # Optional settings
-  image = "nix-sandbox:latest";  # Container image
+  image = "llm-devcontainer:latest";  # Container image
   enableUSB = false;             # USB device passthrough
   usbDevices = [];               # Vendor:product patterns ["0483:374b"]
   extraMounts = [];              # Additional volume mounts

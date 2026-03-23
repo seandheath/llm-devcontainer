@@ -1,4 +1,4 @@
-# CLAUDE.md — nix-sandbox
+# CLAUDE.md — llm-devcontainer
 
 ## Project Overview
 

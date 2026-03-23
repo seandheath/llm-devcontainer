@@ -10,7 +10,7 @@
 
 { pkgs
 , lib ? pkgs.lib
-, name ? "nix-sandbox-base"
+, name ? "llm-devcontainer-base"
 , tag ? "latest"
 }:
 
@@ -178,9 +178,9 @@ in pkgs.dockerTools.buildLayeredImage {
 
     # Labels for identification
     Labels = {
-      "org.opencontainers.image.title" = "nix-sandbox-base";
+      "org.opencontainers.image.title" = "llm-devcontainer-base";
       "org.opencontainers.image.description" = "Base image for Claude Code development containers";
-      "org.opencontainers.image.source" = "https://github.com/user/nix-sandbox";
+      "org.opencontainers.image.source" = "https://github.com/seandheath/llm-devcontainer";
     };
 
     # Entrypoint will be set in stage 2

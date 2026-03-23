@@ -5,16 +5,16 @@
 # requires network access which is restricted in Nix's build sandbox.
 #
 # Build with:
-#   podman build -t nix-sandbox:latest -f container/Containerfile .
+#   podman build -t llm-devcontainer:latest -f container/Containerfile .
 #
 # Prerequisites:
 #   - Base image must be loaded: nix build .#base-image && podman load < result
 
-ARG BASE_IMAGE=nix-sandbox-base:latest
+ARG BASE_IMAGE=llm-devcontainer-base:latest
 FROM ${BASE_IMAGE}
 
 # Metadata
-LABEL org.opencontainers.image.title="nix-sandbox"
+LABEL org.opencontainers.image.title="llm-devcontainer"
 LABEL org.opencontainers.image.description="Claude Code development container with Nix"
 LABEL org.opencontainers.image.version="1.0.0"
 

@@ -1,4 +1,4 @@
-# zshrc for nix-sandbox development container
+# zshrc for llm-devcontainer development container
 #
 # Minimal but functional configuration for Claude Code development.
 # Includes direnv integration and useful aliases.
@@ -57,7 +57,7 @@ git_branch() {
 
 # Prompt colors
 local prompt_user="%F{cyan}%n%f"
-local prompt_host="%F{magenta}nix-sandbox%f"
+local prompt_host="%F{magenta}llm-devcontainer%f"
 local prompt_dir="%F{blue}%~%f"
 local prompt_git="%F{yellow}\$(git_branch)%f"
 local prompt_char="%(?:%F{green}:%F{red})❯%f"
@@ -161,7 +161,7 @@ gg() {
 # Show helpful info on first shell
 if [[ ! -f ~/.hushlogin ]]; then
     echo ""
-    echo "  nix-sandbox development container"
+    echo "  llm-devcontainer development container"
     echo "  ─────────────────────────────────"
     echo "  Workspace: /workspace"
     echo "  Claude:    claude --help"
