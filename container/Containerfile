@@ -21,9 +21,9 @@ LABEL org.opencontainers.image.version="1.0.0"
 # Switch to root for installation
 USER root
 
-# Create npm global directory with correct permissions
-RUN mkdir -p /home/developer/.npm-global && \
-    chown -R 1000:1000 /home/developer/.npm-global
+# Create npm directories with correct permissions
+RUN mkdir -p /home/developer/.npm-global /home/developer/.npm && \
+    chown -R 1000:1000 /home/developer/.npm-global /home/developer/.npm
 
 # Configure npm to use user-local global directory
 # This avoids permission issues and keeps globals in home
